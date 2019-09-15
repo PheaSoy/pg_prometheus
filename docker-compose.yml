@@ -1,0 +1,44 @@
+version: '3.7'
+services:
+  exporter:
+    image: wrouesnel/postgres_exporter
+    ports:
+    - 9187:9187
+    #command: "-extend.query-path=/queries.yaml"
+    environment:
+      DATA_SOURCE_NAME: postgresql://postgres_exporter:password@192.168.1.34:5432/postgres?sslmode=disable
+      #PG_EXPORTER_WEB_TELEMETRY_PATH: /pg/metrics
+    # volumes:
+    # - pg/to/queries.yaml:/queries.yaml
+    networks:
+      monitoring:
+        aliases:
+        - exporter
+
+  prometheus:
+    image: prom/prometheus:v2.6.1
+    ports:
+      - 9090:9090
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      monitoring:
+        aliases:
+          - prometheus 
+  grafana:
+    image: grafana/grafana:5.4.3
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+    networks:
+      monitoring:
+        aliases:
+          - grafana
+networks:
+  monitoring:
